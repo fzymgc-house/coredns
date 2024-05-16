@@ -14,13 +14,16 @@ jobs:
       - name: Check out code into the Go module directory
         uses: actions/checkout@v1
 
-      - name: Get dependencies
-        run: |
-          go get -v -t -d ./...
-          if [ -f Gopkg.toml ]; then
-              curl https://raw.githubusercontent.com/golang/dep/master/install.sh | sh
-              dep ensure
-          fi
-
       - name: Build
-        run: go build -v -ldflags="-s -w -X github.com/coredns/coredns/coremain.GitCommit=$(GITHUB_SHA)" -o coredns
+        run: |
+          make
+          ./coredns -version || exit 1
+
+      - name: Build Docker Images
+        run: |
+          docker login docker.pkg.github.com --username fzymgc --password "${GITHUB_TOKEN}"
+          docker build . -t docker.pkg.github.com/${GITHUB_REPOSITORY}/coredns:${GITHUB_SHA}
+          docker push docker.pkg.github.com/${GITHUB_REPOSITORY}/coredns:${GITHUB_SHA}
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          DOCKER_BUILDKIT: "1"

@@ -1,3 +1,4 @@
+# syntax=docker/dockerfile:latest
 FROM debian:stable-slim
 
 RUN apt-get update && apt-get -uy upgrade
